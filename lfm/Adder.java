@@ -1,4 +1,6 @@
-package ICS2018.my;
+package ICS2018.lfm;
+
+import ICS2018.lfm.Util;
 
 public class Adder {
     /**

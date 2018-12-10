@@ -1,4 +1,4 @@
-package ICS2018.my;
+package ICS2018.lfm;
 
 public class ALU {
     public static void main(String[] args) {

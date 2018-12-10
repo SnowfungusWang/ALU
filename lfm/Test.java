@@ -1,9 +1,4 @@
-package ICS2018.my;
-
-import ICS2018.a.ALU;
-import ICS2018.my.Adder;
-
-import javax.security.auth.Subject;
+package ICS2018.lfm;
 
 public class Test {
     public static void main(String[] args) {
