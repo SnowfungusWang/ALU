@@ -5,6 +5,7 @@ public class ALU {
 //        String s = new ALU().integerRepresentation("-1", 16);
         System.out.println(Util.signExt("11011", 4));
     }
+
     /**
      * 生成十进制浮点数的二进制表示。
      * 需要考虑 0、反规格化、正负无穷（“+Inf”和“-Inf”）、 NaN等因素，具体借鉴 IEEE 754。

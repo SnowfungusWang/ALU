@@ -161,8 +161,104 @@ public class IntOperation {
     public static String integerDivision(String operand1, String operand2, int length, boolean addBack) {
         //恢复余数除法相对简单
         String op1 = Util.signExt(operand1, length);
-        String op2 = Util.signExt(operand2, length);
-        return operand1;
+        String op2 = Util.signExt(operand2, length);//首先符号扩展到length位
+        // -----[溢出][商][余数]
+        //特殊情况判定
+        // 1. 0/ not 0 ---返回全0
+        if (!op1.contains("1") && op2.contains("1")) {
+            return Util.zeroExt("0", 2 * length + 1);
+        }
+        // 2. not 0 / 0 --- exception
+        if (op1.contains("1") && !op2.contains("1")) {
+            return "Zero divisor exception";
+        }
+        //3. 0 / 0  ---NaN
+        if (!op1.contains("1") && !op2.contains("1")) {
+            return "NaN";
+        }
+        //4. 溢出情况---
+        // 由于是n位除以n位，故只存在n位的最小补码值/(-1)发生上溢出
+        if (!op1.substring(1).contains("1") && !op2.contains("0")) {
+            return "1".concat(Util.zeroExt("0", 2 * length));
+        }
+
+        //正常情况
+        char signDividend = op1.charAt(0);//得到被除数的符号位
+        char signDivisor = op2.charAt(0);//得到除数的符号位
+        String result = Util.signExt(op1, length * 2);//被除数符号扩展到2*length位
+        String adder = Shifter.leftShift(Util.zeroExt(op2, length * 2), length);//加除数单元
+        String subber = Shifter.leftShift(             //减除数单元
+                Util.zeroExt(Adder.minusInteger(op2), //得到除数补码值
+                        length * 2), length);
+        if (addBack) {//恢复余数除法
+            for (int i = 0; i < length; i++) {
+                result = Shifter.leftShift(result, 1);
+                char signRest = result.charAt(0);
+                String tmpVal;
+                if (signRest != signDivisor) {  //余数和除数   异号相加
+                    tmpVal = Adder.adder(result, adder, '0', 2 * length).substring(1);
+                } else {
+//                    tmpVal=Adder.adder(result,subber,2*length).substring(1);
+                    tmpVal = Adder.adder(result, subber, '0', 2 * length).substring(1);
+                }
+                if (tmpVal.charAt(0) != signRest) {//余数符号改变  result不做任何操作
+                } else {
+                    result = tmpVal.substring(0, 2 * length - 1).concat("1"); //商补1
+                }
+            }
+            String rest = result.substring(0, length);
+            String quotient = result.substring(length);
+            if (signDividend != signDivisor) {
+                quotient = Adder.minusInteger(quotient);
+            }
+            return "0"
+                    .concat("." + quotient)
+                    .concat("." + rest);
+        } else {     //不恢复余数除法
+            char tmpQ;
+            if (signDividend == signDivisor) {   //做减法
+                result = Adder.adder(result, subber, '0', length * 2).substring(1);
+            } else {                             //做加法
+                result = Adder.adder(result, adder, '0', length * 2).substring(1);
+            }
+            tmpQ = result.charAt(0) == signDivisor ? '1' : '0';//上商
+            System.out.println(tmpQ);
+            for (int i = 0; i < length; i++) {
+                //余数符号和除数符号一致,补1,否则补0
+                result = Shifter.leftShift(result, 1)
+                        .substring(0, length * 2 - 1)
+                        .concat(String.valueOf(tmpQ));//先移位
+                char signRest = result.charAt(0);
+                if (signRest != signDivisor) {  //余数和除数   异号相加
+//                    result=Adder.adder(result,adder,2*length).substring(1);
+                    result = Adder.adder(result, adder, '0', 2 * length).substring(1);
+                } else {
+//                    result=Adder.adder(result,subber,2*length).substring(1);
+                    result = Adder.adder(result, subber, '0', 2 * length).substring(1);
+                }
+                tmpQ = result.charAt(0) == signDivisor ? '1' : '0';//上商
+            }
+            String quotient = result.substring(length);
+            String rest = result.substring(0, length);
+            //修正商
+            quotient = Shifter.leftShift(quotient, 1)
+                    .substring(0, length - 1)
+                    .concat(String.valueOf(tmpQ));
+            if (signDividend != signDivisor) {
+                quotient = Adder.oneAdder(quotient).substring(1); //加1返回的是len+1的字符串
+            }
+            //修正余数
+            if (rest.charAt(0) != signDividend) {
+                if (signDividend != signDivisor) {//余数减除数
+                    rest = Adder.adder(rest, Adder.minusInteger(op2), '0', length).substring(1);
+                } else {//余数加除数
+                    rest = Adder.adder(rest, op2, '0', length).substring(1);
+                }
+            }
+            return "0"
+                    .concat("." + quotient)
+                    .concat("." + rest);
+        }
     }
 
 }
